@@ -7,15 +7,20 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
+    "customize-cra": "^1.0.0",
     "react": "^19.2.4",
+    "react-app-rewired": "^2.2.1",
     "react-dom": "^19.2.4",
+    "react-native": "^0.84.1",
+    "react-native-web": "^0.21.2",
     "react-scripts": "5.0.1",
+    "task-sdk": "file:../task-sdk",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
