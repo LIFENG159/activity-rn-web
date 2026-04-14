@@ -1,6 +1,7 @@
 import React from 'react';
 import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 
+// 积分气泡组件：用于展示待领取积分并触发领取动作
 export default function PointsBubble({ value, onClaim, style }) {
   return (
     <Animated.View style={[styles.bubble, style]}>

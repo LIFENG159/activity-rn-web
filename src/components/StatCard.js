@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+// 统计卡片：展示总积分/待领取/次数等指标
 export default function StatCard({ label, value, testID }) {
   return (
     <View style={styles.card}>

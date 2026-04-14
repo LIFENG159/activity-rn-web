@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Easing } from 'react-native';
 
+// 气泡浮动动画 Hook：控制缩放与上下浮动
 export function useFloatingBubble(active) {
   const bubbleScale = useRef(new Animated.Value(0)).current;
   const bubbleFloat = useRef(new Animated.Value(0)).current;
@@ -8,6 +9,7 @@ export function useFloatingBubble(active) {
 
   useEffect(() => {
     if (active) {
+      // 激活时弹出并开始浮动
       Animated.spring(bubbleScale, {
         toValue: 1,
         friction: 5,
@@ -34,6 +36,7 @@ export function useFloatingBubble(active) {
         floatLoopRef.current.start();
       }
     } else {
+      // 未激活时重置动画状态
       bubbleScale.setValue(0);
       if (floatLoopRef.current) {
         floatLoopRef.current.stop();

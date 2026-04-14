@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
+// 转盘组件：展示奖品扇区并提供旋转按钮
 export default function PrizeWheel({ prizes, spinStyle, onSpin, disabled, lastPrize }) {
   const wheelBackground = useMemo(() => {
     const step = 100 / prizes.length;

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+// 倒计时任务 Hook：负责计时、完成状态与清理
 export function useCountdownTask({ duration, onComplete }) {
   const [countdown, setCountdown] = useState(0);
   const [completed, setCompleted] = useState(false);
@@ -19,6 +20,7 @@ export function useCountdownTask({ duration, onComplete }) {
     };
   }, []);
 
+  // 启动倒计时（防止重复启动）
   const start = useCallback(() => {
     if (completed || countdown > 0) {
       return;

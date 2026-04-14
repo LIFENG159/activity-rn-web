@@ -1,5 +1,6 @@
 import { getJson } from './requestClient';
 
+// 任务接口：获取任务列表
 export async function fetchTasks({ baseUrl, activityId, userId, signal }) {
   if (!baseUrl) {
     return [];

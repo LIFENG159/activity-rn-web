@@ -118,6 +118,7 @@ export default function ActivityPage() {
       ? 'Done'
       : 'Start Browse';
 
+
   return (
     <View style={styles.app}>
       <View style={styles.header}>
@@ -176,6 +177,7 @@ export default function ActivityPage() {
           ))
         )}
       </View>
+
     </View>
   );
 }
