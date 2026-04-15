@@ -49,8 +49,8 @@ export default function AiAssistantPage() {
   return (
     <View style={styles.app}>
       <View style={styles.header}>
-        <Text style={styles.title}>AI Assistant</Text>
-        <Text style={styles.subtitle}>Chat with the activity helper.</Text>
+        <Text style={styles.title}>AI 助手</Text>
+        <Text style={styles.subtitle}>可询问活动规则与任务问题。</Text>
       </View>
       <AiChatWidget messages={aiMessages} onSend={handleAiSend} isSending={aiSending} />
     </View>

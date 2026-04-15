@@ -28,7 +28,7 @@ export default function PrizeWheel({ prizes, spinStyle, onSpin, disabled, lastPr
           ]}
         />
         <View style={styles.wheelCenter}>
-          <Text style={styles.wheelCenterText}>SPIN</Text>
+          <Text style={styles.wheelCenterText}>抽奖</Text>
         </View>
         <View style={styles.wheelPointer} />
       </View>
@@ -38,10 +38,10 @@ export default function PrizeWheel({ prizes, spinStyle, onSpin, disabled, lastPr
         onPress={onSpin}
         style={[styles.spinButton, disabled && styles.spinButtonDisabled]}
       >
-        <Text style={styles.spinText}>Spin Wheel</Text>
+        <Text style={styles.spinText}>开始抽奖</Text>
       </Pressable>
       <Text style={styles.prizeNote}>
-        {lastPrize ? `Last prize: ${lastPrize.label}` : 'Spin to convert chances into points.'}
+        {lastPrize ? `上次奖励：${lastPrize.label}` : '消耗抽奖次数获取积分。'}
       </Text>
     </View>
   );

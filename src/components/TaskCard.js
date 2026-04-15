@@ -2,7 +2,15 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 // 任务卡片：展示任务标题、描述与操作按钮
-export default function TaskCard({ title, meta, actionLabel, onAction, disabled, actionTestId }) {
+export default function TaskCard({
+  title,
+  meta,
+  actionLabel,
+  actionContent,
+  onAction,
+  disabled,
+  actionTestId,
+}) {
   return (
     <View style={styles.card}>
       <View style={styles.info}>
@@ -16,7 +24,7 @@ export default function TaskCard({ title, meta, actionLabel, onAction, disabled,
         style={[styles.actionButton, disabled && styles.actionButtonDisabled]}
         testID={actionTestId}
       >
-        <Text style={styles.actionText}>{actionLabel}</Text>
+        {actionContent || <Text style={styles.actionText}>{actionLabel}</Text>}
       </Pressable>
     </View>
   );

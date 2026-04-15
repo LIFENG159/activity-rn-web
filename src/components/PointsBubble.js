@@ -12,7 +12,7 @@ export default function PointsBubble({ value, onClaim, style }) {
         testID="points-bubble"
         style={styles.bubblePress}
       >
-        <Text style={styles.bubbleTitle}>Claim</Text>
+        <Text style={styles.bubbleTitle}>领取</Text>
         <Text style={styles.bubbleValue}>+{value}</Text>
       </Pressable>
     </Animated.View>

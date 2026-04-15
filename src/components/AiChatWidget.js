@@ -18,10 +18,10 @@ export default function AiChatWidget({ messages, onSend, isSending }) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>AI Assistant</Text>
+      <Text style={styles.title}>AI 助手</Text>
       <View style={styles.messages}>
         {messages.length === 0 ? (
-          <Text style={styles.placeholder}>Ask anything about the activity.</Text>
+          <Text style={styles.placeholder}>可以询问活动规则或任务问题。</Text>
         ) : (
           messages.map((message) => (
             <View
@@ -43,7 +43,7 @@ export default function AiChatWidget({ messages, onSend, isSending }) {
           onSubmitEditing={handleSend}
           returnKeyType="send"
           blurOnSubmit
-          placeholder="Type a question..."
+          placeholder="请输入问题..."
           placeholderTextColor="#7a819a"
           style={styles.input}
         />
@@ -52,7 +52,7 @@ export default function AiChatWidget({ messages, onSend, isSending }) {
           onPress={handleSend}
           style={[styles.sendButton, (!trimmed || isSending) && styles.sendDisabled]}
         >
-          <Text style={styles.sendText}>{isSending ? '...' : 'Send'}</Text>
+          <Text style={styles.sendText}>{isSending ? '...' : '发送'}</Text>
         </Pressable>
       </View>
     </View>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import PointsBubble from '../components/PointsBubble';
 import PrizeWheel from '../components/PrizeWheel';
@@ -17,6 +17,11 @@ export default function ActivityPage() {
   const [orderComplete, setOrderComplete] = useState(false);
   const [lastPrize, setLastPrize] = useState(null);
   const [serviceTasks, setServiceTasks] = useState([]);
+
+  const sdkRef = useRef(null);
+  const bubbleTriggeredRef = useRef(new Set());
+  const sdkSectionRef = useRef(null);
+  const scrollAreaRef = useRef(null);
 
   const spinValue = useRef(new Animated.Value(0)).current;
   const spinDegree = useRef(0);
@@ -44,16 +49,43 @@ export default function ActivityPage() {
       activityId: 'activity-demo',
       userId: 'user-demo',
       callbacks: {
-        onTasksUpdated: (tasks) => setServiceTasks(tasks),
+        onTasksUpdated: (tasks) => {
+          setServiceTasks(tasks);
+          tasks.forEach((task) => {
+            if (task.type === 'delayed_claim' && task.status !== 'claimable' && task.status !== 'claimed') {
+              sdk.startTask(task.id);
+            }
+          });
+        },
+        onTaskStatusChanged: (task) => {
+          setServiceTasks((prev) =>
+            prev.map((item) => (item.id === task.id ? { ...item, ...task } : item))
+          );
+        },
+        onCountdownTick: (taskId, remainingSeconds) => {
+          setServiceTasks((prev) =>
+            prev.map((item) =>
+              item.id === taskId
+                ? {
+                    ...item,
+                    progress: { ...(item.progress || {}), remainingSeconds },
+                  }
+                : item
+            )
+          );
+        },
         onError: (error) => {
           console.warn('Task SDK error', error);
         },
       },
     });
 
+    sdkRef.current = sdk;
+
     sdk.fetchTasks();
 
     return () => {
+      sdkRef.current = null;
       sdk.destroy();
     };
   }, []);
@@ -118,12 +150,63 @@ export default function ActivityPage() {
       ? 'Done'
       : 'Start Browse';
 
+  const scrollToNode = (ref) => {
+    if (!ref.current || typeof ref.current.scrollIntoView !== 'function') {
+      return;
+    }
+    ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleServiceAction = (task) => {
+    if (!sdkRef.current) {
+      return;
+    }
+    if (task.status === 'claimable' || task.status === 'completed') {
+      sdkRef.current.claimReward(task.id);
+      return;
+    }
+    if (task.type === 'browse_jump_countdown') {
+      if (task.config && task.config.jumpUrl && typeof window !== 'undefined') {
+        window.open(task.config.jumpUrl, '_blank', 'noopener,noreferrer');
+      }
+      sdkRef.current.startTask(task.id);
+      return;
+    }
+    if (task.type === 'bubble_scroll_countdown') {
+      scrollToNode(scrollAreaRef);
+      return;
+    }
+    if (task.type === 'diversion_order') {
+      sdkRef.current.completeTask(task.id);
+      return;
+    }
+    if (task.type === 'delayed_claim') {
+      sdkRef.current.startTask(task.id);
+    }
+  };
+
+  const handleScrollTrigger = (event) => {
+    const offsetY = event.nativeEvent?.contentOffset?.y || 0;
+    if (offsetY < 20 || !sdkRef.current) {
+      return;
+    }
+    serviceTasks
+      .filter((task) => task.type === 'bubble_scroll_countdown')
+      .forEach((task) => {
+        if (bubbleTriggeredRef.current.has(task.id)) {
+          return;
+        }
+        bubbleTriggeredRef.current.add(task.id);
+        sdkRef.current.startTask(task.id);
+      });
+  };
+
 
   return (
     <View style={styles.app}>
       <View style={styles.header}>
-        <Text style={styles.title}>Mission Arena</Text>
-        <Text style={styles.subtitle}>Complete tasks, claim points, and spin for rewards.</Text>
+        <Text style={styles.title}>任务中心</Text>
+        <Text style={styles.subtitle}>完成任务领取积分，转盘抽奖赢奖励。</Text>
       </View>
 
       <View style={styles.dashboard}>
@@ -136,25 +219,25 @@ export default function ActivityPage() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Task Board</Text>
+        <Text style={styles.sectionTitle}>任务列表</Text>
         <TaskCard
-          title="Browse Countdown Task"
+          title="浏览倒计时任务"
           meta={browseMeta}
           actionLabel={browseActionLabel}
           onAction={browseTask.start}
           disabled={browseTask.completed || browseTask.countdown > 0}
         />
         <TaskCard
-          title="Order Task"
-          meta={`Reward ${ORDER_POINTS} pts + 1 spin`}
-          actionLabel={orderComplete ? 'Done' : 'Simulate Order'}
+          title="下单任务"
+          meta={`奖励 ${ORDER_POINTS} 积分 + 1 次抽奖`}
+          actionLabel={orderComplete ? '已完成' : '模拟下单'}
           onAction={completeOrderTask}
           disabled={orderComplete}
         />
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Big Prize Wheel</Text>
+        <Text style={styles.sectionTitle}>大奖转盘</Text>
         <PrizeWheel
           prizes={PRIZES}
           spinStyle={spinStyle}
@@ -164,18 +247,65 @@ export default function ActivityPage() {
         />
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>SDK Tasks</Text>
+      <View ref={sdkSectionRef} style={styles.section}>
+        <Text style={styles.sectionTitle}>SDK 任务</Text>
         {serviceTasks.length === 0 ? (
-          <Text style={styles.taskMeta}>Set REACT_APP_TASK_API_BASE to load tasks.</Text>
+          <Text style={styles.taskMeta}>请先配置接口地址以加载任务。</Text>
         ) : (
-          serviceTasks.map((task) => (
-            <View key={task.id} style={styles.serviceCard}>
-              <Text style={styles.serviceTitle}>{task.title || task.type}</Text>
-              <Text style={styles.taskMeta}>Status: {task.status}</Text>
-            </View>
-          ))
+          serviceTasks.map((task) => {
+            const remaining = task.progress?.remainingSeconds;
+            const isCounting =
+              task.type === 'delayed_claim' &&
+              task.status === 'in_progress' &&
+              typeof remaining === 'number';
+            const formattedRemaining = isCounting
+              ? new Date(remaining * 1000).toISOString().slice(11, 19)
+              : '';
+            const actionLabel =
+              task.type === 'diversion_order'
+                ? '模拟下单'
+                : task.type === 'delayed_claim'
+                  ? task.status === 'claimable'
+                    ? '领取奖励'
+                    : '开始倒计时'
+                  : task.status === 'completed' || task.status === 'claimable'
+                    ? '领取奖励'
+                    : '开始任务';
+            const disabled =
+              task.status === 'claimed' || task.status === 'in_progress';
+            const actionContent = isCounting ? (
+              <Text style={styles.actionCountdown}>{formattedRemaining}</Text>
+            ) : null;
+            return (
+              <TaskCard
+                key={task.id}
+                title={task.title || task.type}
+                meta={`状态：${task.status}`}
+                actionLabel={actionLabel}
+                actionContent={actionContent}
+                onAction={() => handleServiceAction(task)}
+                disabled={disabled}
+              />
+            );
+          })
         )}
+        <View style={styles.scrollHint}>
+          <Text style={styles.taskMeta}>向下滑动触发浏览任务。</Text>
+          <ScrollView
+            ref={scrollAreaRef}
+            style={styles.scrollBox}
+            contentContainerStyle={styles.scrollContent}
+            onScroll={handleScrollTrigger}
+            scrollEventThrottle={16}
+          >
+            <Text style={styles.scrollText}>继续下滑…</Text>
+            <Text style={styles.scrollText}>继续下滑…</Text>
+            <Text style={styles.scrollText}>继续下滑…</Text>
+            <Text style={styles.scrollText}>继续下滑…</Text>
+            <Text style={styles.scrollText}>继续下滑…</Text>
+            <Text style={styles.scrollText}>继续下滑…</Text>
+          </ScrollView>
+        </View>
       </View>
 
     </View>
@@ -247,5 +377,27 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#f5f7ff',
+  },
+  scrollHint: {
+    marginTop: 12,
+    gap: 8,
+  },
+  scrollBox: {
+    maxHeight: 120,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 109, 148, 0.35)',
+  },
+  scrollContent: {
+    padding: 12,
+    gap: 10,
+  },
+  scrollText: {
+    color: '#c2c7e3',
+    fontSize: 12,
+  },
+  actionCountdown: {
+    color: '#f7f8ff',
+    fontWeight: '700',
   },
 });
